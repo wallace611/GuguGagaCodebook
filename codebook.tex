@@ -194,4 +194,218 @@
 \subsection{Discretization}
 \lstinputlisting{others/discretization.cpp}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Extended DP Section (From Slides)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Advanced Dynamic Programming}
+
+\subsection{Bitmask DP}
+位元壓縮 DP，泛指狀態是由二進制表示的 DP。通常可以表示集合，0 表示不取，1 表示取。假設有 $n$ 個東西要考慮，使用長度為 $n$ 的 bitstring 表示狀態，複雜度通常為 $O(2^n)$。看到題目範圍 $n \le 20$ 即可考慮此解法。
+
+\textbf{搭電梯問題 (Elevator Problem)} \\
+$n$ 個人排隊，每個人重 $w_i$，要搭一台負重 $x$ 的電梯，問最少要搭幾趟？利用 $O(2^n)$ 窮舉最後上電梯的人，減少了窮舉 $n!$ 排列的時間複雜度。
+
+\begin{lstlisting}
+#define pp pair<int, int>
+#define ff first
+#define ss second
+
+pp dp[(1<<20)]; // State up to 2^20
+
+void solve() {
+    int n, x;
+    cin >> n >> x;
+    vector<int> w(n);
+    for (auto &c : w) cin >> c;
+    
+    // Initialize: maximum n rides, so set n+1 as infinity
+    for(int s = 0; s < (1<<n); ++s) dp[s].ff = n + 1;
+    
+    // Empty set weight is x (forces first item to start a new ride)
+    dp[0].ss = x, dp[0].ff = 0;
+    
+    // Iterate through all state sets
+    for(int s = 1; s < (1<<n); ++s) {
+        for(int i = 0; i < n; ++i) {
+            // Check if person i is in the current set s
+            if(!(s & (1<<i))) continue;
+            
+            // ... Transition logic goes here ...
+        }
+    }
+}
+\end{lstlisting}
+
+\textbf{Hamiltonian Path / TSP} \\
+圖中有 $n$ 個點，詢問是否能走過所有點且每個點僅經過一次 ($O(n \cdot 2^n)$)。需要記錄經過了哪些點，以及停留在哪個點。
+
+\begin{lstlisting}
+// Initialize: each node can reach itself
+for(int i = 0; i < n; ++i) {
+    dp[(1<<i)][i] = true;
+}
+
+// Iterate through all subsets
+for(int s = 1; s < (1<<n); ++s) {
+    for(int j = 0; j < n; ++j) {
+        // Continue if vertex j is not in state s
+        if(s & (1<<j)) continue;
+        
+        // Iterate all endpoints in state s
+        for(int i = 0; i < n; ++i) {
+            // s must pass through i
+            if(!(s & (1<<i))) continue;
+            
+            // If there is a directed edge from i to j
+            if(edge[i][j]) {
+                dp[s | (1<<j)][j] |= dp[s][i];
+            }
+        }
+    }
+}
+
+bool ans = false;
+for(int i = 0; i < n; ++i) ans |= dp[(1<<n)-1][i];
+\end{lstlisting}
+
+\subsection{Sum Over Subsets (SOS DP) \& 高維前綴和}
+目標是解決求給定集合的所有子集和：
+$$F(S)=\sum_{x\subseteq S}A(x)$$
+直接窮舉子集複雜度為 $O(3^n)$，使用 SOS DP 則可優化至 $O(n \cdot 2^n)$。
+
+\textbf{高維前綴和概念 (High-Dimensional Prefix Sum)} \\
+SOS DP 的本質其實就是高維度的前綴和推廣：
+\begin{enumerate}
+    \item \textbf{一維前綴和}：沿著單一方向累加，\texttt{F[x] += F[x-1]}。
+    \item \textbf{二維前綴和}：先固定 $Y$ 對 $X$ 做一維前綴和 (\texttt{F[x][y] += F[x-1][y]})，再固定 $X$ 對 $Y$ 做一維前綴和 (\texttt{F[x][y] += F[x][y-1]})。幾何上就是把一條條的前綴和（線）疊加成一個矩形（面）。
+    \item \textbf{N 維前綴和 (SOS DP)}：在 bitmask 中，共有 $n$ 個維度，每個維度的大小只有 0 和 1。我們只需依序窮舉每一維 $i$，若當前狀態 $s$ 在該維度是 1 (即 \texttt{s \& (1 << i)} 為真)，就將長度較短的狀態（即該維度為 0 的狀態 $s \oplus (1 \ll i)$）累加到 $F[s]$ 中。
+\end{enumerate}
+
+\begin{lstlisting}
+// Precompute state weights (single point initialization)
+for(int s = 0; s < (1<<n); ++s) {
+    F[s] = A[s];
+}
+
+// Iterate through each dimension (bit)
+for(int i = 0; i < n; ++i) {
+    // Iterate through all states (points in the n-dimensional space)
+    for (int s = 0; s < (1<<n); ++s) {
+        // If the i-th bit of state s is 1 (meaning it includes this dimension)
+        if (s & (1 << i)) {
+            // Accumulate subset sums: F[s] += F[s - 1 on the i-th dimension]
+            F[s] += F[s ^ (1 << i)];
+        }
+    }
+}
+\end{lstlisting}
+
+\subsection{Counting DP}
+用於計算方法數的 DP，通常可以配合排列組合與排容原理。
+
+\textbf{障礙物棋盤走路計數問題} \\
+給定 $n \times m$ 棋盤與 $N$ 個障礙物，只能向下或右走，求起點到終點且不經過障礙物的方法數。
+利用總和扣除不合法路徑的方法：
+$$dp[D] = cnt(O,D) - \sum_{\{k\}} cnt(k,D) \cdot dp[k]$$
+轉移順序：將點先按 $X$ 排序，再按 $Y$ 排序，確保 partial-ordering 正確。
+
+\begin{lstlisting}
+vector<pair<int, int>> A(N);
+sort(A.begin(), A.end());
+
+// Insert start point at index 0 and end point at back
+A.insert(A.begin(), pair<int, int>{1, 1}); 
+A.push_back(pair<int, int>{n, m});
+
+vector<int> dp(N + 5);
+
+for(int i = 1; i <= N + 1; ++i) {
+    // Calculate total valid permutations without obstacles
+    dp[i] = cnt(0, i); 
+    auto [x, y] = A[i];
+    
+    // Subtract combinations that pass through other obstacles
+    for(int j = 1; j < i; ++j) {
+        auto [xx, yy] = A[j];
+        
+        // Ensure obstacle j is strictly within the path to obstacle i
+        if(xx <= x && yy <= y) {
+            dp[i] -= cnt(j, i) * dp[j];
+        }
+    }
+}
+cout << dp[N+1];
+\end{lstlisting}
+
+\subsection{Probabilistic DP}
+將機率丟到 DP 上做轉移，或者計算期望值 (利用期望值的線性性質 $E[X+c \cdot Y] = E[X] + c \cdot E[Y]$)。
+
+\textbf{骰子問題 (Dice Probabilities)} \\
+擲 $n$ 次六面骰子，所有結果相加落在 $[a, b]$ 的機率。
+
+\begin{lstlisting}
+// dp[i][j] represents the probability of reaching sum j after i rolls
+double dp[N+1][6*N+1];
+
+// Initialize the first roll probability
+for(int i = 1; i <= 6; ++i) {
+    dp[1][i] = 1.0 / 6.0;
+}
+
+for(int i = 2; i <= n; ++i) {
+    // Max sum after n rolls is 6*n (assuming n <= 100, max 600)
+    for(int w = 1; w <= 600; ++w) {
+        // Iterate through all 6 dice faces
+        for(int j = 1; j <= 6; ++j) {
+            if(w >= j) {
+                dp[i][w] += dp[i-1][w-j];
+            }
+        }
+        // Divide once per state to prevent precision errors
+        dp[i][w] /= 6.0;
+    }
+}
+
+double ans = 0.0;
+for(int i = a; i <= b; ++i) {
+    ans += dp[n][i];
+}
+\end{lstlisting}
+
+\textbf{抓老鼠期望值問題 (Mice Probability)} \\
+袋中有 $w$ 隻白鼠、$b$ 隻黑鼠。雙方輪流抓，抓到白鼠贏，每次抓完黑鼠有機率跑出一隻。
+
+\begin{lstlisting}
+using ld = long double;
+ld dp[1005][1005];
+
+// Initialize: when only white mice remain, princess wins 100%
+for (int i = 1; i <= w; i++) dp[i][0] = 1;
+// Initialize: when only black mice remain, princess wins 0%
+for (int i = 1; i <= b; i++) dp[0][i] = 0;
+
+for (int i = 1; i <= w; i++) {
+    for (int j = 1; j <= b; j++) {
+        auto &cur = dp[i][j];
+        
+        // Case 1: Princess catches a white mouse immediately
+        cur += (ld)i / (i + j);
+        
+        // Probability that both princess and dragon catch a black mouse
+        ld x = (ld)j / (i + j) * (j - 1) / (i + j - 1);
+        
+        // Case 2: A black mouse escapes after they both catch black mice
+        if (j >= 3) {
+            cur += x * (j - 2) / (i + j - 2) * dp[i][j-3];
+        }
+        
+        // Case 3: A white mouse escapes after they both catch black mice
+        if (j >= 2) {
+            cur += x * i / (i + j - 2) * dp[i-1][j-2];
+        }
+    }
+}
+\end{lstlisting}
+
 \end{document}
