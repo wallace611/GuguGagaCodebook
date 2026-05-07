@@ -1,0 +1,197 @@
+\documentclass[a4paper,10pt,twocolumn,oneside]{article}
+
+% Column spacing for two-column mode
+\setlength{\columnsep}{10pt} 
+% Column separator line thickness for two-column mode
+\setlength{\columnseprule}{0pt} 
+
+% Math packages for definitions, theorems, and symbols
+\usepackage{amsthm} 
+\usepackage{amssymb}
+\usepackage{amsmath}
+
+% Font configuration package
+\usepackage{fontspec} 
+
+% Color packages
+\usepackage{color}
+\usepackage[x11names]{xcolor}
+
+% Package for displaying source code
+\usepackage{listings} 
+
+% Header and footer customization
+\usepackage{fancyhdr} 
+
+% Graphics and image handling
+\usepackage{graphicx} 
+
+% List formatting
+\usepackage{enumerate}
+
+% Title formatting
+\usepackage{titlesec}
+
+% Drawing package
+\usepackage{tikz}
+
+% Code patching package
+\usepackage{xpatch}
+
+% Chinese typesetting support for XeLaTeX
+\usepackage[CheckSingle, CJKmath]{xeCJK}
+
+% Replaced CJKulem with ulem for underlining support compatible with xeCJK
+\usepackage{ulem}
+
+% Font encoding
+\usepackage[T1]{fontenc}
+
+% Additional utility packages
+\usepackage{courier}
+
+% Page margin and layout settings
+\topmargin=0pt
+\headsep=5pt
+\textheight=780pt
+\voffset=-40pt
+\textwidth=545pt
+\marginparsep=0pt
+\marginparwidth=0pt
+\marginparpush=0pt
+\oddsidemargin=0pt
+\evensidemargin=0pt
+\hoffset=-42pt
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Font Settings
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Set main English font
+\setmainfont{Consolas} 
+
+% Set monospace font (Changed from Monaco to Courier New for Windows compatibility)
+\setmonofont{Courier New} 
+
+% Set main Chinese font (Microsoft JhengHei is natively supported on Windows)
+\setCJKmainfont{Microsoft JhengHei} 
+
+% Set section numbering depth to level 3
+\setcounter{secnumdepth}{3} 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Listings (Code Block) Settings
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\makeatletter
+\lst@CCPutMacro\lst@ProcessOther {"2D}{\lst@ttfamily{-{}}{-{}}}
+\@empty\z@\@empty
+\makeatother
+
+\lstset{
+    % The language of the code
+    language=C++,
+    % The size of the fonts that are used for the code
+    basicstyle=\footnotesize\ttfamily,
+    % The size of the fonts that are used for the line-numbers
+    numberstyle=\footnotesize,
+    % The step between two line-numbers. If it's 1, each line will be numbered
+    stepnumber=1,
+    % How far the line-numbers are from the code
+    numbersep=5pt,
+    % Choose the background color
+    backgroundcolor=\color{white},
+    % Show spaces adding particular underscores
+    showspaces=false,
+    % Underline spaces within strings
+    showstringspaces=false,
+    % Show tabs within strings adding particular underscores
+    showtabs=false,
+    % Adds a frame around the code
+    frame=false,
+    % Sets default tabsize to 2 spaces
+    tabsize=2,
+    % Sets the caption-position to bottom
+    captionpos=b,
+    % Sets automatic line breaking
+    breaklines=true,
+    % Sets if automatic breaks should only happen at whitespace
+    breakatwhitespace=false,
+    % If you want to add a comment within your code
+    escapeinside={\%*}{*)},
+    % If you want to add more keywords to the set
+    morekeywords={*},
+    % Keyword styling
+    keywordstyle=\bfseries\color{Blue1},
+    % Comment styling
+    commentstyle=\itshape\color{Red4},
+    % String styling
+    stringstyle=\itshape\color{Green4},
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Document Body
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+% Apply fancy header/footer style
+\pagestyle{fancy}
+
+\fancyhead[L]{Gugu Gaga Codebook}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\contentsname}{Contents} 
+
+\scriptsize
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Math}
+\subsection{Fpow}
+\lstinputlisting{math/fpow.cpp}
+
+\subsection{Combination}
+\lstinputlisting{math/combination.cpp}
+
+\subsection{Extgcd}
+\lstinputlisting{math/extgcd.cpp}
+
+\section{Shortest Path}
+\subsection{Dijkstra}
+\lstinputlisting{shortest_path/dijkstra.cpp}
+
+\subsection{Bellman-Ford}
+\lstinputlisting{shortest_path/bellman_ford.cpp}
+
+\subsection{Floyd-Warshall}
+\lstinputlisting{shortest_path/floyd_warshall.cpp}
+
+\section{DP}
+\subsection{0-1 Knapsack}
+\lstinputlisting{dp/01_knapsack.cpp}
+
+\subsection{Unbounded Knapsack}
+\lstinputlisting{dp/unbounded_knapsack.cpp}
+
+\subsection{SOS DP}
+\lstinputlisting{dp/sos_dp.cpp}
+
+\subsection{O(lgn) LIS}
+\lstinputlisting{dp/olgn_lis.cpp}
+
+\section{Graph}
+\subsection{Euler Path}
+\lstinputlisting{graph/euler_path.cpp}
+
+\section{Data Structure}
+\subsection{Segment Tree}
+\lstinputlisting{data_structure/segment_tree.cpp}
+
+\subsection{Binary Indexed Tree}
+\lstinputlisting{data_structure/bit.cpp}
+
+\section{Others}
+\subsection{Discretization}
+\lstinputlisting{others/discretization.cpp}
+
+\end{document}
