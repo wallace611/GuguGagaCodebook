@@ -9,5 +9,5 @@ inv[N] = fpow(fac[N], mod-2); // 快速冪
 for(int i = N-1; i >=0; i--)   inv[i] = inv[i+1] * (i+1) % mod;
 
 ll C(int n,int k){
-    return fac[n]*inv[k]%mod*inv[n-k]%mod;
+	return fac[n]*inv[k]%mod*inv[n-k]%mod;
 }

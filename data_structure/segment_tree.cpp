@@ -1,45 +1,91 @@
-#define cl(x) (x<<1)
-#define cr(x) (x<<1)+1
-const int N;
-int seg[4*N];
-int arr[N];
-void pull(int id){
-    seg[id]=max(seg[cl(id)],seg[cr(id)]);
-}
-void build(int id,int l,int r){
-    if(l==r){
-        seg[id]=arr[l];
-        return ;
+// !!!注意build()時初始化用的陣列也是1-base
+#define cl(x) (x*2)
+#define cr(x) (x*2+1)
+
+struct segmentTree {
+  int n;
+  vector<int> seg, tag, cov;
+  segmentTree( int _n ): n(_n) {
+    seg=tag=cov=vector<int>(n*4,0);
+  }
+  void push( int i, int L, int R ) {
+    if( cov[i] ) {
+      seg[i]=cov[i]*(R-L+1);
+      if( L < R ) {
+          cov[cl(i)]=cov[cr(i)]=cov[i];
+          tag[cl(i)]=tag[cr(i)]=0;
+      }
+      cov[i]=0;
     }
-    int mid=(l+r)>>1;
-    build(cl(id),l,mid);
-    build(cr(id),mid+1,r);
-    pull(id);
-}
-void update(int id,int l,int r,int x,int v){
-    if(l==r){
-        seg[id]=v;
-        return ;
+    if( tag[i] ) {
+      seg[i]+=tag[i]*(R-L+1);
+      if( L < R ) {
+          tag[cl(i)]+=tag[i];
+          tag[cr(i)]+=tag[i];
+      }
+      tag[i]=0;
     }
-    int mid=(l+r)>>1;
-    if(x<=mid){
-        update(cl(id),l,mid,x,v);    
+  }
+  void pull( int i, int L, int R ) {
+    if( L >= R ) return;
+    int mid=(L+R)>>1;
+    push(cl(i),L,mid);
+    push(cr(i),mid+1,R);
+    seg[i]=seg[cl(i)]+seg[cr(i)];
+  }
+  void build( vector<int>& arr, int i=1, int L=1, int R=-1 ) {
+    if( R == -1 ) R=n;
+    if( L == R ) {
+      seg[i]=arr[L];
+      return;
     }
-    if(mid<x){
-        update(cr(id),mid+1,r,x,v);  
+    int mid=(L+R)>>1;
+    build(arr,cl(i),L,mid);
+    build(arr,cr(i),mid+1,R);
+    pull(i,L,R);
+  }
+  int query( int rL, int rR, int i=1, int L=1, int R=-1 ) {
+    if( R == -1 ) R=n;
+    push(i,L,R);
+    if( rL <= L && R <= rR ) return seg[i];
+    int mid=(L+R)>>1, ret=0;
+    if( rL <= mid ) ret+=query(rL,rR,cl(i),L,mid);
+    if( mid < rR ) ret+=query(rL,rR,cr(i),mid+1,R);
+    return ret;
+  }
+  void update( int rL, int rR, int val, int i=1, int L=1, int R=-1 ) {
+    if( R == -1 ) R=n;
+    push(i,L,R);
+    if( rL <= L && R <= rR ) {
+        tag[i]=val;
+        return;
     }
-    pull(id);
-}
-int query(int id,int l,int r,int sl,int sr){
-    if(sl<=l&&r<=sr){//目前這個區間在查詢區間內
-        return seg[id];
+    int mid=(L+R)>>1;
+    if( rL <= mid ) update(rL,rR,val,cl(i),L,mid);
+    if( mid < rR ) update(rL,rR,val,cr(i),mid+1,R);
+    pull(i,L,R);
+  }
+  void cover( int rL, int rR, int val, int i=1, int L=1, int R=-1 ) {
+    if( R == -1 ) R=n;
+    push(i,L,R);
+    if( rL <= L && R <= rR ) {
+        cov[i]=val;
+        return;
     }
-    int mid=(l+r)>>1,res=0;
-    if(sl<=mid){//左區間跟查詢區間有交集
-        res=max(res,query(cl(id),l,mid,sl,sr));
-    }
-    if(mid<sr){//右區間跟查詢區間有交集
-        res=max(res,query(cr(id),mid+1,r,sl,sr));
-    }
-    return res;
-}
+    int mid=(L+R)>>1;
+    if( rL <= mid ) cover(rL,rR,val,cl(i),L,mid);
+    if( mid < rR ) cover(rL,rR,val,cr(i),mid+1,R);
+    pull(i,L,R);
+  }
+};
+
+/* Test Case:
+4
+1 2 3 4
+5
+2 1 3
+1 1 3 1
+2 1 3
+1 1 4 1
+2 1 4
+*/
